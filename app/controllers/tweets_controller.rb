@@ -3,25 +3,25 @@ class TweetsController < ApplicationController
 
   def index
     @tweets = Tweet.all
-    render json: @tweets, status: :ok
+    json_response(@tweets)
   end
 
   def show
-    render json: @tweet, status: :ok
+    json_response(@tweet)
   end
 
   def create
     @tweet = Tweet.create!(tweet_params)
-    render json: @tweet, status: :created
+    json_response(@tweet, :created)
   rescue ActiveRecord::RecordInvalid => e
-    render json: { message: e.message }, status: :unprocessable_entity
+    json_response({ message: e.message }, :unprocessable_entity)
   end
 
   def update
     @tweet.update!(tweet_params)
     head :no_content
   rescue ActiveRecord::RecordInvalid => e
-    render json: { message: e.message }, status: :unprocessable_entity
+    json_response({ message: e.message }, :unprocessable_entity)
   end
 
   def destroy
@@ -34,7 +34,7 @@ class TweetsController < ApplicationController
   def set_tweet
     @tweet = Tweet.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    render json: { message: 'Tweet not found' }, status: :not_found
+    json_response({ message: 'Tweet not found' }, :not_found)
   end
 
   def tweet_params

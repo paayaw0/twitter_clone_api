@@ -22,7 +22,6 @@ RSpec.describe 'Tweets', type: :request do
 
     context 'for an existing tweet' do
       it 'should return a tweet with the correct id' do
-        json_response = JSON.parse(response.body)
         expect(json_response['id']).to eq(tweet1.id)
       end
 
@@ -41,7 +40,6 @@ RSpec.describe 'Tweets', type: :request do
       end
 
       it 'should return not found message' do
-        json_response = JSON.parse(response.body)
         expect(json_response['message']).to eq('Tweet not found')
       end
     end
@@ -58,7 +56,6 @@ RSpec.describe 'Tweets', type: :request do
       end
 
       it 'should return created tweet' do
-        json_response = JSON.parse(response.body)
         expect(json_response['content']).to eq(valid_params[:content])
       end
     end
@@ -71,7 +68,6 @@ RSpec.describe 'Tweets', type: :request do
       end
 
       it 'should return failure to create tweet message' do
-        json_response = JSON.parse(response.body)
         expect(json_response['message']).to eq('Validation failed: tweet can not be blank')
       end
     end
