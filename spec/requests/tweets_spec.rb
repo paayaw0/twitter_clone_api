@@ -8,7 +8,6 @@ RSpec.describe 'Tweets', type: :request do
     before { get '/tweets' }
 
     it 'should return all valid tweets' do
-      json_response = JSON.parse(response.body)
       expect(json_response.size).to eq(Tweet.all.size)
     end
 
