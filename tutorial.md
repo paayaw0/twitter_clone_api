@@ -8,9 +8,12 @@ This is a guide to show you how to build a RESTful API with Rails 7. It is divid
 ## Initial setup
 
 This includes setting up the database and configuring your testing framework. In this tutorial we will use postgresql for our database and RSpec as our testing framework. We will also include the following gems related to testing
+
+```
     - database_cleaner
     - shoulda_matchers
     - factory_bot
+```
 
 First things first, create a directory(give it any name) and run the following command:
 
