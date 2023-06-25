@@ -59,6 +59,41 @@ RSpec.describe 'Tweets', type: :request do
       end
     end
 
+    context 'when image is uploaded' do
+      context 'that is supported' do
+        let!(:path) { File.open(Rails.root.join('sample_media', 'sample_image.jpg')) }
+        let!(:image_file) { fixture_file_upload(path, 'image/jpeg') }
+        let!(:valid_params) { { media: image_file } }
+
+        before { post '/tweets', params: valid_params, headers: { "Content-Type": 'Application/json' } }
+
+        it 'should successful attach image to tweet object' do
+          tweet = Tweet.find(json_response['id'])
+          expect(tweet.media).to be_attached
+        end
+
+        it 'should return 201 status for code' do
+          expect(response).to have_http_status(201)
+        end
+      end
+
+      context 'that is not supported' do
+        let!(:path) { File.open(Rails.root.join('sample_media', 'sample_csv.csv')) }
+        let!(:csv_file) { fixture_file_upload(path, 'text/csv') }
+        let!(:valid_params) { { media: csv_file } }
+
+        before { post '/tweets', params: valid_params, headers: { "Content-Type": 'Application/json' } }
+
+        it 'should not attach image to tweet object' do
+          expect(json_response['message']).to eq('Validation failed: Media is not a supported media type')
+        end
+
+        it 'should return status code of unprocessable_entity' do
+          expect(response).to have_http_status(422)
+        end
+      end
+    end
+
     context 'for invalid params' do
       before { post '/tweets', params: {}.to_json, headers: { "Content-Type": 'Application/json' } }
 

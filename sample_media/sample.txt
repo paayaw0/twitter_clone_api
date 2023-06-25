@@ -1,0 +1,36 @@
+FROM ruby:2.6.4-alpine
+
+ENV RAILS_ENV=production
+ENV RAILS_LOG_TO_STDOUT=true
+ENV RAILS_SERVE_STATIC_FILES=true
+RUN touch /firstboot.txt
+
+EXPOSE 80
+ENTRYPOINT ["/app/entrypoint"]
+CMD ["/app/entrypoint"]
+USER root
+WORKDIR /app
+COPY . .
+RUN rm Gemfile.lock
+RUN apk add --update --no-cach busybox-extras bash nmap nmap git yarn nodejs gcc g++ musl-dev make python ruby-dev build-base mariadb-dev libxml2-dev icu-dev tzdata sqlite-dev krb5-dev krb5-libs gcompat git libstdc++ && apk add imagemagick-dev=6.9.6.8-r1 --repository http://dl-3.alpinelinux.org/alpine/v3.5/main/ 
+RUN gem install bundler -v '1.17.3'
+RUN gem install rake -v '12.3.2'
+RUN gem install therubyracer
+RUN gem install libv8 -v '3.16.14.19' -- --with-system-v8
+RUN bundle config build.libv8 --with-system-v8
+RUN echo 'gem: --no-document' > /etc/gemrc 
+RUN CFLAGS="-Wno-cast-function-type" BUNDLE_FORCE_RUBY_PLATFORM=1 bundle install --without development problems --jobs $(nproc) --retry 2
+RUN gem uninstall -I google-protobuf
+RUN gem install google-protobuf --version=3.9.2 --platform=ruby
+RUN gem install grpc --platform=ruby
+RUN echo "a" | RAILS_ENV=production bundle exec rails webpacker:install
+RUN RAILS_ENV=production bundle exec rails webpacker:install:vue
+RUN yarn add vuetify
+RUN yarn add axios
+RUN yarn add foreman
+RUN yarn install
+RUN RAILS_ENV=production rake db:migrate
+RUN RAILS_ENV=production rake assets:precompile
+RUN rake db:seed:01_questions
+RUN rm -rf /var/cache/apk/*
+RUN chmod +x /app/entrypoint
