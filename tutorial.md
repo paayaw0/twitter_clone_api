@@ -7,21 +7,25 @@ This is a guide to show you how to build a RESTful API with Rails 7. It is divid
 ## **Chapter 1**
 ## Initial setup
 
-This includes setting up the database and configuring your test framework. In this tutorial we will use postgresql for our database and Rspec as our testing framework. We will also include the following gems related to testing
-    • database_cleaner
-    • shoulda_matchers
-    • factory_bot
+This includes setting up the database and configuring your testing framework. In this tutorial we will use postgresql for our database and RSpec as our testing framework. We will also include the following gems related to testing
+    - database_cleaner
+    - shoulda_matchers
+    - factory_bot
 
-First things first, create a directory and run the following command:
+First things first, create a directory(give it any name) and run the following command:
 
 ```
-rails new twitter_clone_api –api -T –database=postresql
+mkdir rails_api_project
+
+cd rails_api_project
+
+rails new twitter_clone_api --api -T --database=postresql
 
 cd twitter_clone_api
 
-bundle 
+rails db:create
 ```
-
+The above series of commands creates your new rails api project with a given directory structure. The last command creates both our development and test databases.
 
 Now let’s go ahead and add these gems into the Gemfile and run bundle command again in the terminal.
 
@@ -40,7 +44,7 @@ end
 
 
 We must configure a couple of the gems to get them to work properly.
-For Rspec, run the following command
+For RSspec, run the following command
 
 ```
   rails g rspec:install
@@ -86,7 +90,7 @@ Run
 bundle exec rspec 
 ```
 
-command in your terminal to see if everything works. If you so, you should see the following output:
+command in your terminal to see if everything works. If so, you should see the following output:
 ![Alt text](image.png)
 
 
@@ -112,12 +116,14 @@ A thread is a series of linked tweets.
     - user has_many :tweets, :tweet belongs_to :user
     - user  has_many :followers through :followings
     - user has_many :follows through :followings
+    - user has_manhy :bookmarks, bookmark belongs_to :user
     - tweet has_many :replies(self-referential), reply belongs_to :tweet
     - tweet has_many :likes, like belongs_to :user
     - tweet has_many :retweets(self-referential, an original tweet will not have a link, a retweet will, allows you to follow a chain of retweets like a linked list), also scoped per user, I.e this tweet can have many retweets but one retweet per user
-    - tweet has_may :bookmarks, :bookmark belongs_to :tweet
-    - Each tweet will have an attribute called thread_link that links to another tweet in the thread. The shortest thread consists just 2 tweets.
+    - tweet has_many :bookmarks, :bookmark belongs_to :tweet
+    - Each tweet will have an attribute called thread_link that links to another tweet in the thread. The shortest thread consists of just 2 tweets.
 
+Even though the above may seem straight forward you have to remember that replies, retweets, quotes are all tweets-the same entity essentially. So we will have to architect the relationship between all of them knowing that they are essentially the same thing but with slight variation. Rails' active record allows us to model this easily and nicely and we will get to see how in the coming chapters.
 
 Now that we have sufficiently modeled the database we can proceed with a clearer picture of how these entities relate to each other. When starting out a project I usually build out the core entities first, I.e, anything but the user model-that happens lasts and for me it is easier to just slap on authentication and authorization on top of everything else when the app is working. So let’s begin. 
 
@@ -134,7 +140,7 @@ A tweet will be the primary medium of communication between users and the large 
 That’s it! Simple! But enough to convey a user’s message. As we go along this tutorial you will see that this entity will accumulate more attributes but we won’t get ahead of ourselves. At the moment we just need to allow users to create a tweet to convey information.
 
 We will begin by creating a model called tweet with the attributes listed above and some validations.
-Copy the code below in the terminal
+Copy the code below in the terminal to create the model
 
 ```
 rails g model Tweet content media:attachment
@@ -150,7 +156,7 @@ rails db:migrate && rails db:migrate RAILS_ENV=test
 
 Note here that we ran the command for the second time specifying the test environment. We want our test database to be consistent with our development database.
 
-Now that we have our database setup, let’s write some tests. Before we do, we need to discuss what a tweet should entail. For a tweet to have any meaning, we must ensure that it has at least one of the 2 attributes not blank. A tweet could have either just text, media(photo, gif, video, etc) or both. We should not allow blank tweets - tweets with neither attributes set to a value. The whole purpose of this social network we are trying to build is to allow users to communicate something meaningful to each other-blank tweets fail to serve this purpose so we won’t allow it. To ensure this we need to write some validation logic. 
+Now that we have our database setup, let’s write some tests. Before we do, we need to discuss what a tweet should entail. For a tweet to have any meaning, we must ensure that it has at least one of the 2 attributes not blank. A tweet could have either just text, media(photo, gif, video, etc) or both. We should not allow blank tweets, that is, tweets with neither attributes set to a value. The whole purpose of this social network we are trying to build is to allow users to communicate something meaningful to each other and blank tweets fail to serve this purpose so we won’t allow it. To ensure this we need to write some validation logic. 
 
 Let’s write test cases first. First we want to ensure that a tweet is invalid if it has neither attributes present. Then we have to write a test case to test that a given tweet is valid even if just one of the attributes is present. So put the following code inside the `spec/models/tweet_spec.rb` file
 
@@ -188,7 +194,7 @@ Ok. let’s run our test suite. It will fail and we will see why.
 ![Alt text](image-1.png)
 
 
-Our tests are failing because as it is now we have no validation for creating a tweet. Currently an empty tweet-a tweet with no value for neither attributes is permitted. Even though one of our test cases passes, it is a false positive. Why? Because the definition of a valid tweet hasn’t been defined. As far as our tweet goes, any tweet object can be created in our system and it will be valid.
+Our tests are failing because as it is now we have no validation for creating a tweet. Currently an empty tweet, which is a tweet with no value for neither attributes is permitted. Even though one of our test cases passes, it is a false positive because the definition of a valid tweet hasn’t been defined. As far as our tweet goes, any tweet object can be created in our system and it will be valid.
 
 Let’s fix this with a custom validation. Create a file under the models directory called tweet_validator.rb and insert the following code.
 
@@ -203,9 +209,9 @@ end
  ```
 
 
-This is pretty straight forward. An invalid tweet-a tweet with both attributes nil or blank will raise an error.
+This is pretty straight forward. An invalid tweet with both content and media attributes nil and blank respectively will raise an error.
 
-In our Tweet model we have to include ActiveModel::Validations and then pass the name of our custom validator as an argument to the validates_with command
+In our Tweet model we have to include ActiveModel::Validations and then pass the name of our custom validator as an argument to the validates_with method.
 
 ```ruby
 class Tweet < ApplicationRecord
@@ -231,9 +237,9 @@ We need to develop the ability for users to do the following regarding tweets:
     • show a tweet
     • show a list of tweets
     • delete a tweet 
-These are typical CRUD actions
+These are typical CRUD(create, read, update and delete) actions
 
-To proceed, we have to generate a controller and setup some routes. Also, we will create spec/requests directory where we will test our endpoints
+To proceed, we have to generate a controller and setup some routes. Also, The spec/requests directory will be created for us when we execute the rails generator. This is where we will test our endpoints.
 
 Let’s generate our controllers
 
@@ -242,7 +248,7 @@ Let’s generate our controllers
 rails g controller Tweets index show create update destroy --skip-routes
 ```
 
-We added the –skip-routes to prevent rails from polluting our routes file with routes for each of the actions we created in the Tweets controller. We will use the handy resources method
+We added the –skip-routes to prevent rails from polluting our `config/routes.rb` file with routes for each of the actions we created in the Tweets controller. We will use the handy resources method
 
 ```ruby
 Rails.application.routes.draw do
@@ -519,7 +525,7 @@ Dir[Rails.root.join('spec', 'support', '**', '*.rb')].sort.each { |f| require f 
 ```
 
 
-and include the module we just created in Rspec configure block inside the `rails_helper.rb`
+and include the module we just created inside RSpec configure block in the `rails_helper.rb`
 
 ```ruby
  # factory_bot configuration
