@@ -60,7 +60,7 @@ RSpec.describe 'Tweets', type: :request do
     end
 
     context 'when image is uploaded' do
-      context 'that is supported' do
+      context 'is supported' do
         let!(:path) { File.open(Rails.root.join('sample_media', 'sample_image.jpg')) }
         let!(:image_file) { fixture_file_upload(path, 'image/jpeg') }
         let!(:valid_params) { { media: image_file } }
@@ -77,7 +77,7 @@ RSpec.describe 'Tweets', type: :request do
         end
       end
 
-      context 'that is not supported' do
+      context 'is not supported' do
         let!(:path) { File.open(Rails.root.join('sample_media', 'sample_csv.csv')) }
         let!(:csv_file) { fixture_file_upload(path, 'text/csv') }
         let!(:valid_params) { { media: csv_file } }

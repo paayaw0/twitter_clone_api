@@ -69,4 +69,44 @@ RSpec.describe Tweet, type: :model do
       end
     end
   end
+
+  context 'character limit to content' do
+    before do
+      tweet.content = 'But I must explain to you how all this mistaken idea of denouncing pleasure
+      and praising pain was born and I will give you a complete account of the system, and 
+      expound the actual teachings of the great explorer of the truth, the master-builder of human happiness. 
+      No one rejects, dislikes, or avoids pleasure itself, because it is pleasure, but because those who do not 
+      know how to pursue pleasure rationally encounter consequences that are extremely painful. Nor again is there 
+      anyone who loves or pursues or desires to obtain pain of itself, because it is pain, but because occasionally 
+      circumstances occur in which toil and pain can procure him some great pleasure. To take a trivial example, which 
+      of us ever undertakes laborious physical exercise, except to obtain some advantage from it? But who has any right 
+      to find fault with a man who chooses to enjoy a pleasure that has no annoying consequences, or one who avoids a pain 
+      that produces no resultant pleasure?'
+    end
+
+    it 'raise error when limit is exceeded' do
+      expect{ tweet.save! }.to raise_error(ActiveRecord::RecordInvalid)
+    end
+
+    it 'tweet object should have error message' do
+      tweet.save
+      expect(tweet.errors.messages[:content].first).to eq('character limit of 140 exceeded!')
+    end
+  end
+
+  context '2MB size limit on images' do
+    let(:path) { File.open(Rails.root.join('sample_media', 'sample_image1.jpg')) }
+    let(:image) { fixture_file_upload(path, 'image/jpeg') }
+
+    before { tweet.media.attach(image) }
+
+    it 'raises error when size limit is exceeded' do
+      expect{ tweet.save! }.to raise_error(ActiveRecord::RecordInvalid)
+    end
+
+    it 'tweet object should have error message' do
+      tweet.save
+      expect(tweet.errors.messages[:media].first).to eq('image size exceeds the 2MB limit!')
+    end
+  end
 end
