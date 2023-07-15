@@ -3,6 +3,12 @@ require 'rails_helper'
 RSpec.describe Tweet, type: :model do
   let(:tweet) { build(:tweet) }
 
+  context 'test associations' do
+    it { should have_one_attached(:media) }
+    it { should have_many(:retweets).dependent(:destroy).class_name('Tweet').with_foreign_key('tweet_id') }
+    it { should belong_to(:tweet).optional }
+  end
+
   context 'a tweet should' do
     it 'not be valid' do
       expect(tweet).to_not be_valid
