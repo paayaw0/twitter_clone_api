@@ -20,7 +20,7 @@ class Tweet < ApplicationRecord
 
   belongs_to :tweet, optional: true
 
-  validates_with TweetValidator, unless: proc { |tweet| tweet.tweet_id.presence }
+  validates_with TweetValidator, unless: proc { |tweet| tweet.is_retweet? }
   validates :media, allow_blank: true, media_support: true, media: true
   validates :content, allow_blank: true, length: { maximum: 140, message: 'character limit of 140 exceeded!' }
 end
