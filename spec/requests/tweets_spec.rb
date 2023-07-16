@@ -151,30 +151,35 @@ RSpec.describe 'Tweets', type: :request do
   end
 
   describe 'POST #retweet' do
-    context 'plain retweet' do
-      before {
+    context 'retweet' do
+      before do
         post "/tweets/#{tweet1.id}/retweets", params: {}.to_json, headers: { 'Content-Type': 'Application/json' }
-      }
+      end
 
       it 'should return 201 status for code' do
         expect(response).to have_http_status(201)
       end
 
-      it "should return a retweet" do
+      it 'should return a retweet' do
         expect(json_response['tweet_id']).not_to be_nil
       end
     end
+  end
 
+  describe 'POST #quote_tweet' do
     context 'Quote tweet with some content' do
       valid_params = { content: 'I want to explore the internals of Ruby' }
 
-      before { post "/tweets/#{tweet1.id}/retweets", params: valid_params.to_json, headers: { "Content-Type": 'Application/json' } }
+      before do
+        post "/tweets/#{tweet1.id}/quote_tweets", params: valid_params.to_json,
+                                              headers: { "Content-Type": 'Application/json' }
+      end
 
       it 'should return 201 status for code' do
         expect(response).to have_http_status(201)
       end
 
-      it 'should return created retweet' do
+      it 'should return created quote tweet' do
         expect(json_response['content']).to eq(valid_params[:content])
       end
     end
@@ -184,10 +189,12 @@ RSpec.describe 'Tweets', type: :request do
       let!(:image_file) { fixture_file_upload(path, 'image/jpeg') }
       let!(:valid_params) { { media: image_file } }
 
-      before { post "/tweets/#{tweet1.id}/retweets", params: valid_params, headers: { "Content-Type": 'Application/json' } }
+      before do
+        post "/tweets/#{tweet1.id}/quote_tweets", params: valid_params, headers: { "Content-Type": 'Application/json' }
+      end
 
-      it 'should successful attach image to retweet' do
-        retweet = tweet1.retweets.find(json_response['id'])
+      it 'should successful attach image to quote tweet' do
+        retweet = tweet1.quote_tweets.find(json_response['id'])
         expect(retweet.media).to be_attached
       end
 
@@ -199,20 +206,89 @@ RSpec.describe 'Tweets', type: :request do
     context 'Quote tweet with both content and media' do
       let!(:path) { File.open(Rails.root.join('sample_media', 'sample_image.jpg')) }
       let!(:image_file) { fixture_file_upload(path, 'image/jpeg') }
-      let!(:valid_params) { { 
-                              media: image_file,
-                              content: 'I want to explore the internals of Ruby'
-                            } 
-                          }
+      let!(:valid_params) do
+        {
+          media: image_file,
+          content: 'I want to explore the internals of Ruby'
+        }
+      end
 
-      before { post "/tweets/#{tweet1.id}/retweets", params: valid_params, headers: { "Content-Type": 'Application/json' } }
-      
-      it 'should successful attach image to retweet' do
-        retweet = tweet1.retweets.find(json_response['id'])
+      before do
+        post "/tweets/#{tweet1.id}/quote_tweets", params: valid_params, headers: { "Content-Type": 'Application/json' }
+      end
+
+      it 'should successful attach image to quote tweet' do
+        retweet = tweet1.quote_tweets.find(json_response['id'])
         expect(retweet.media).to be_attached
       end
 
-      it 'should return created retweet' do
+      it 'should return created quote tweet' do
+        expect(json_response['content']).to eq(valid_params[:content])
+      end
+
+      it 'should return 201 status for code' do
+        expect(response).to have_http_status(201)
+      end
+    end
+  end
+
+  describe 'POST #reply_tweet' do
+    context 'Reply tweet with some content' do
+      valid_params = { content: 'I want to explore the internals of Ruby' }
+
+      before do
+        post "/tweets/#{tweet1.id}/replies", params: valid_params.to_json,
+                                              headers: { "Content-Type": 'Application/json' }
+      end
+
+      it 'should return 201 status for code' do
+        expect(response).to have_http_status(201)
+      end
+
+      it 'should return created reply to tweet' do
+        expect(json_response['content']).to eq(valid_params[:content])
+      end
+    end
+
+    context 'Reply tweet with just media' do
+      let!(:path) { File.open(Rails.root.join('sample_media', 'sample_image.jpg')) }
+      let!(:image_file) { fixture_file_upload(path, 'image/jpeg') }
+      let!(:valid_params) { { media: image_file } }
+
+      before do
+        post "/tweets/#{tweet1.id}/replies", params: valid_params, headers: { "Content-Type": 'Application/json' }
+      end
+
+      it 'should successful attach image to reply a tweet' do
+        retweet = tweet1.replies.find(json_response['id'])
+        expect(retweet.media).to be_attached
+      end
+
+      it 'should return 201 status for code' do
+        expect(response).to have_http_status(201)
+      end
+    end
+
+    context 'Reply tweet with both content and media' do
+      let!(:path) { File.open(Rails.root.join('sample_media', 'sample_image.jpg')) }
+      let!(:image_file) { fixture_file_upload(path, 'image/jpeg') }
+      let!(:valid_params) do
+        {
+          media: image_file,
+          content: 'I want to explore the internals of Ruby'
+        }
+      end
+
+      before do
+        post "/tweets/#{tweet1.id}/replies", params: valid_params, headers: { "Content-Type": 'Application/json' }
+      end
+
+      it 'should successful attach image to reply a tweet' do
+        retweet = tweet1.replies.find(json_response['id'])
+        expect(retweet.media).to be_attached
+      end
+
+      it 'should return created reply to a tweet' do
         expect(json_response['content']).to eq(valid_params[:content])
       end
 
