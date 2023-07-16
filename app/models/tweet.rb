@@ -19,6 +19,7 @@ class Tweet < ApplicationRecord
            foreign_key: 'tweet_id'
 
   has_many :likes, dependent: :destroy
+  has_many :bookmarks, dependent: :destroy
 
   belongs_to :tweet, optional: true
 
