@@ -1,5 +1,5 @@
 class TweetsController < ApplicationController
-  before_action :set_tweet, only: %i[show update destroy retweet]
+  before_action :set_tweet, only: %i[show update destroy retweet quote_tweet reply_tweet]
 
   def index
     @tweets = Tweet.all
@@ -31,6 +31,20 @@ class TweetsController < ApplicationController
 
   def retweet
     @retweet = @tweet.retweets.create!(tweet_params)
+    json_response(@retweet, :created)
+  rescue ActiveRecord::RecordInvalid => e
+    json_response({ message: e.message }, :unprocessable_entity)
+  end
+
+  def quote_tweet
+    @retweet = @tweet.quote_tweets.create!(tweet_params)
+    json_response(@retweet, :created)
+  rescue ActiveRecord::RecordInvalid => e
+    json_response({ message: e.message }, :unprocessable_entity)
+  end
+
+  def reply_tweet
+    @retweet = @tweet.replies.create!(tweet_params)
     json_response(@retweet, :created)
   rescue ActiveRecord::RecordInvalid => e
     json_response({ message: e.message }, :unprocessable_entity)
