@@ -13,6 +13,11 @@ class Tweet < ApplicationRecord
            class_name: 'Tweet',
            foreign_key: 'tweet_id'
 
+  has_many :quote_tweets, -> { where is_quote_tweet: true },
+           dependent: :destroy,
+           class_name: 'Tweet',
+           foreign_key: 'tweet_id'
+
   belongs_to :tweet, optional: true
 
   validates_with TweetValidator, unless: proc { |tweet| tweet.tweet_id.presence }
