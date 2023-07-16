@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_07_15_050852) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_16_044145) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -47,6 +47,9 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_15_050852) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "tweet_id"
+    t.boolean "is_retweet", default: false
+    t.boolean "is_quote_tweet", default: false
+    t.boolean "is_reply", default: false
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

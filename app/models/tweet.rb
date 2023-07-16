@@ -3,12 +3,12 @@ class Tweet < ApplicationRecord
 
   has_one_attached :media
 
-  has_many :retweets,
+  has_many :retweets, -> { where is_retweet: true },
            dependent: :destroy,
            class_name: 'Tweet',
            foreign_key: 'tweet_id'
 
-  has_many :replies,
+  has_many :replies, -> { where is_reply: true },
            dependent: :destroy,
            class_name: 'Tweet',
            foreign_key: 'tweet_id'
