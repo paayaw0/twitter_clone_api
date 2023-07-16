@@ -6,6 +6,8 @@ RSpec.describe Tweet, type: :model do
   context 'test associations' do
     it { should have_one_attached(:media) }
     it { should have_many(:retweets).dependent(:destroy).class_name('Tweet').with_foreign_key('tweet_id') }
+    it { should have_many(:replies).dependent(:destroy).class_name('Tweet').with_foreign_key('tweet_id') }
+
     it { should belong_to(:tweet).optional }
   end
 
