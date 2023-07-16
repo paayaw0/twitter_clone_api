@@ -18,6 +18,8 @@ class Tweet < ApplicationRecord
            class_name: 'Tweet',
            foreign_key: 'tweet_id'
 
+  has_many :likes, dependent: :destroy
+
   belongs_to :tweet, optional: true
 
   validates_with TweetValidator, unless: proc { |tweet| tweet.is_retweet? }

@@ -8,6 +8,7 @@ RSpec.describe Tweet, type: :model do
     it { should have_many(:retweets).conditions(is_retweet: true).dependent(:destroy).class_name('Tweet').with_foreign_key('tweet_id') }
     it { should have_many(:quote_tweets).conditions(is_quote_tweet: true).dependent(:destroy).class_name('Tweet').with_foreign_key('tweet_id') }
     it { should have_many(:replies).conditions(is_reply: true).dependent(:destroy).class_name('Tweet').with_foreign_key('tweet_id') }
+    it { should have_many(:likes).dependent(:destroy) }
 
     it { should belong_to(:tweet).optional }
   end
